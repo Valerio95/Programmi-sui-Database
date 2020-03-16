@@ -86,7 +86,8 @@ public class CreazioneDigimon {
 		while(execute.next()) {
 			id=execute.getInt("idPartita");
 		}
-		PreparedStatement squadraDigimon = connessione.prepareStatement("select * from Partita where id =\""+id+"\";");
+		PreparedStatement squadraDigimon = connessione.prepareStatement("select * from Partita where id =?;");
+		squadraDigimon.setInt(1, id);
 		ResultSet executeSquadra = squadraDigimon.executeQuery();
 		int[] squadra = new int[3];
 		int i=0;
@@ -109,7 +110,8 @@ public class CreazioneDigimon {
 		System.out.println("Inserisci la password della partita");
 		String password= scanner.nextLine();
 
-		PreparedStatement sceltaDigimon = connessione.prepareStatement("select * from Digimon where idUtente =\"" +idPrimo+"\";");
+		PreparedStatement sceltaDigimon = connessione.prepareStatement("select * from Digimon where idUtente =?;");
+		sceltaDigimon.setInt(1, idPrimo);
 		ResultSet listaDigimon = sceltaDigimon.executeQuery();
 		System.out.println("Ecco i digimon che hai a disposizione: ");
 		stampa(listaDigimon);		
