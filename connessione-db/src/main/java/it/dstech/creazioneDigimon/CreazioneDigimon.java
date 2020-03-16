@@ -29,6 +29,9 @@ public class CreazioneDigimon {
 			case 2:
 				rimozioneDigimon(connessione);
 				break;
+			case 3:
+				giocaPartita(connessione);
+				break;
 			case 0:
 				System.exit(0);
 				break;
@@ -37,10 +40,110 @@ public class CreazioneDigimon {
 	}
 	
 	
+	public static void giocaPartita(Connection connessione) throws SQLException {
+			int rigaPrecedente = creaPartita(connessione);
+			
+			while(true) {
+			System.out.println("Attendere che lo sfidante abbia inserito i suoi Digimon nella partita, poi premere 1");
+		
+			int avvio = scanner.nextInt();
+			scanner.nextLine();
+			int nuovaRiga=conteggioRiga(connessione);
+			if(avvio==1 && nuovaRiga==rigaPrecedente) {
+				System.out.println("Il tuo sfidante non ha ancora scelto i suoi Digimon");
+			} else if(avvio==1 && nuovaRiga>rigaPrecedente) {
+				giocaArena(connessione);
+			}
+		}
+	}
+	
+	
+	public static int conteggioRiga(Connection connessione) throws SQLException {
+		PreparedStatement controlloAvvio = connessione.prepareStatement("select idPartita from Partita;");
+		ResultSet execute = controlloAvvio.executeQuery();
+		int numeroRiga = 0;
+		while(execute.next()) {
+			if(numeroRiga<execute.getRow()) {
+				numeroRiga=execute.getRow();
+			}
+		}
+		return numeroRiga;
+	}
+	
+	
+	public static void giocaArena(Connection connessione){
+	}
+	
+	
+	public static int creaPartita(Connection connessione) throws SQLException {
+		String queryCreazionePartita= "INSERT INTO Partita ( idCreatore, password, dc1, dc2, dc3) VALUES (?, ?, ?, ?, ?);";
+		PreparedStatement prepareStatement = connessione.prepareStatement(queryCreazionePartita);
+		System.out.println("Inserisci il tuo id");
+		int idPrimo= scanner.nextInt();
+		scanner.nextLine();
+		System.out.println("Inserisci la password della partita");
+		String password= scanner.nextLine();
+
+		PreparedStatement sceltaDigimon = connessione.prepareStatement("select * from Digimon where idUtente =\"" +idPrimo+"\";");
+		ResultSet listaDigimon = sceltaDigimon.executeQuery();
+		System.out.println("Ecco i digimon che hai a disposizione: ");
+		stampa(listaDigimon);		
+		
+		String[] digimonSelezionati=selezionaDigimon(connessione);
+		
+		prepareStatement.setInt(1, idPrimo);
+		prepareStatement.setString(2, password);
+		prepareStatement.setString(3, digimonSelezionati[0]);
+		prepareStatement.setString(4, digimonSelezionati[1]);
+		prepareStatement.setString(5, digimonSelezionati[2]);
+		prepareStatement.execute();
+		
+		int riga =conteggioRiga(connessione);
+		return riga;
+	}
+	
+	
+	public static String[] selezionaDigimon(Connection connessione) throws SQLException {
+		System.out.println("Inserisci l'id del primo Digimon da selezionare");
+		int idDC1= scanner.nextInt();
+		scanner.nextLine();
+		System.out.println("Inserisci l'id del secondo Digimon da selezionare");
+		int idDC2= scanner.nextInt();
+		scanner.nextLine();
+		System.out.println("Inserisci l'id del terzo Digimon da selezionare");
+		int idDC3= scanner.nextInt();
+		scanner.nextLine();
+		
+		String nome1="", nome2="", nome3="";
+		String[] nomiSelezionati = new String[3];
+		PreparedStatement selezioneDigimon = connessione.prepareStatement("select nome from Digimon where id =\""+idDC1+"\";");
+		ResultSet executeSelezionata = selezioneDigimon.executeQuery();
+		while(executeSelezionata.next()) {
+			nome1 = executeSelezionata.getString("nome");
+		}
+		PreparedStatement selezioneDigimon2 = connessione.prepareStatement("select nome from Digimon where id =\""+idDC2+"\";");
+		ResultSet executeSelezionata2 = selezioneDigimon2.executeQuery();
+		while(executeSelezionata2.next()) {
+			nome2 = executeSelezionata2.getString("nome");
+		}
+		PreparedStatement selezioneDigimon3 = connessione.prepareStatement("select nome from Digimon where id =\""+idDC3+"\";");
+		ResultSet executeSelezionata3 = selezioneDigimon3.executeQuery();
+		while(executeSelezionata3.next()) {
+			nome3 = executeSelezionata3.getString("nome");
+		}
+			nomiSelezionati[0] = nome1;
+			nomiSelezionati[1] = nome2;
+			nomiSelezionati[2] = nome3;
+			
+		return nomiSelezionati;
+	}
+	
+	
 	public static void menu() {
 		System.out.println("Cosa vuoi fare?");
 		System.out.println("1. Crea un Digimon nel database");
 		System.out.println("2. Rimuovi un Digimon dal database");
+		System.out.println("3. Gioca partita");
 		System.out.println("0. Esci");
 	}
 	
@@ -50,7 +153,6 @@ public class CreazioneDigimon {
 		PreparedStatement prepareStatement = connessione.prepareStatement(queryInserimentoDigimon);
 		System.out.println("Inserisci il nome");
 		prepareStatement.setString(1, scanner.nextLine());
-		
 		prepareStatement.setInt(2, generaHP());
 		prepareStatement.setInt(3, generaAttacco());
 		prepareStatement.setInt(4, generaDifesa());
@@ -60,7 +162,7 @@ public class CreazioneDigimon {
 		prepareStatement.setString(6, scanner.nextLine());
 		System.out.println("Inserisci l'id dell'utente");
 		prepareStatement.setString(7, scanner.nextLine());
-		System.out.println("Inserisci il tipo dei Digimon");
+		System.out.println("Inserisci il tipo del Digimon");
 		prepareStatement.setString(8, scanner.nextLine());
 		prepareStatement.execute();
 	}
